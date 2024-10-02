@@ -18,14 +18,8 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-// SignUpResponse defines the structure for the sign-up response
-type SignUpResponse struct {
-	UserID string `json:"user_id"`
-	Err    error  `json:"error,omitempty"`
-}
-
-// LoginResponse defines the structure for the login response
-type LoginResponse struct {
+// Response defines the structure for the response
+type Response struct {
 	Token string `json:"token"`
 	Err   error  `json:"error,omitempty"`
 }
@@ -34,8 +28,8 @@ type LoginResponse struct {
 func makeSignUpEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(SignUpRequest)
-		userID, err := svc.SignUp(ctx, req.Username, req.Password)
-		return SignUpResponse{UserID: userID, Err: err}, nil
+		token, err := svc.SignUp(ctx, req.Username, req.Password)
+		return Response{Token: token, Err: err}, nil
 	}
 }
 
@@ -45,8 +39,8 @@ func makeLoginEndpoint(svc Service) endpoint.Endpoint {
 		req := request.(LoginRequest)
 		token, err := svc.Login(ctx, req.Username, req.Password)
 		if err != nil {
-			return LoginResponse{Err: err}, nil
+			return Response{Err: err}, nil
 		}
-		return LoginResponse{Token: token, Err: nil}, nil
+		return Response{Token: token, Err: nil}, nil
 	}
 }
