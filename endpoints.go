@@ -12,8 +12,8 @@ type SignUpRequest struct {
 	Password string `json:"password"`
 }
 
-// LoginRequest defines the structure for the login request
-type LoginRequest struct {
+// AuthRequest defines the structure for the auth request
+type AuthRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
@@ -33,11 +33,11 @@ func makeSignUpEndpoint(svc Service) endpoint.Endpoint {
 	}
 }
 
-// MakeLoginEndpoint creates the endpoint for the login service
-func makeLoginEndpoint(svc Service) endpoint.Endpoint {
+// makeAuthEndpoint creates the endpoint for the auth service
+func makeAuthEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(LoginRequest)
-		token, err := svc.Login(ctx, req.Username, req.Password)
+		req := request.(AuthRequest)
+		token, err := svc.Authenticate(ctx, req.Username, req.Password)
 		if err != nil {
 			return Response{Err: err}, nil
 		}

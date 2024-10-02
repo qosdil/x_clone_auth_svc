@@ -26,16 +26,18 @@ func MakeHTTPHandler(s Service, logger log.Logger) http.Handler {
 		encodeResponse,
 	)
 
-	// Login endpoint
-	loginHandler := httptransport.NewServer(
-		makeLoginEndpoint(s),
-		decodeLoginRequest,
+	// Auth endpoint
+	authHandler := httptransport.NewServer(
+		makeAuthEndpoint(s),
+		decodeAuthRequest,
 		encodeResponse,
 	)
 
 	// Register routes
-	r.Handle("/auth/signup", signUpHandler).Methods("POST")
-	r.Handle("/auth/login", loginHandler).Methods("POST")
+	pathPrefix := "/auth"
+	v1Path := "/v1" + pathPrefix
+	r.Handle(v1Path, authHandler).Methods("POST")
+	r.Handle(v1Path+"/sign-up", signUpHandler).Methods("POST")
 
 	return r
 }
@@ -97,8 +99,8 @@ func decodeSignUpRequest(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
-func decodeLoginRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req LoginRequest
+func decodeAuthRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}

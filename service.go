@@ -13,7 +13,7 @@ import (
 
 type Service interface {
 	SignUp(ctx context.Context, username, password string) (string, error)
-	Login(ctx context.Context, username, password string) (string, error)
+	Authenticate(ctx context.Context, username, password string) (string, error)
 }
 
 type service struct {
@@ -41,7 +41,7 @@ func (s *service) SignUp(ctx context.Context, username, password string) (string
 	return s.generateJWT(user)
 }
 
-func (s *service) Login(ctx context.Context, username, password string) (string, error) {
+func (s *service) Authenticate(ctx context.Context, username, password string) (string, error) {
 	user, err := s.repo.GetUserByUsername(ctx, username)
 	if err != nil {
 		return "", errors.New("user not found")
