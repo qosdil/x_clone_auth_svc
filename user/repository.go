@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"fmt"
+	grpcSrv "x_clone_auth_svc/user/grpc/service"
 )
 
 type UserRepository interface {
@@ -9,16 +11,21 @@ type UserRepository interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 }
 
-type repository struct{}
+type repository struct {
+	userGrpcClient grpcSrv.ServiceClient
+}
 
-func NewRepository() UserRepository {
-	return &repository{}
+func NewRepository(userGrpcClient grpcSrv.ServiceClient) UserRepository {
+	return &repository{
+		userGrpcClient: userGrpcClient,
+	}
 }
 
 func (r *repository) SaveUser(ctx context.Context, user User) error {
-	// Some gRPC call here
-	// ...
-
+	_, err := r.userGrpcClient.Create(ctx, &grpcSrv.Request{Username: user.Username, Password: user.Password})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

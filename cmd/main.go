@@ -10,15 +10,28 @@ import (
 	app "x_clone_auth_svc"
 	config "x_clone_auth_svc/config"
 	"x_clone_auth_svc/user"
+	userGrpcSvc "x_clone_auth_svc/user/grpc/service"
 
 	"github.com/go-kit/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
 	// Load environment variables
 	config.LoadEnv()
 
-	userRepo := user.NewRepository()
+	// Connect to User Svc on gRPC
+	userGrpcClientConn, err := grpc.Dial(config.GetEnv("USER_GRPC_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	defer userGrpcClientConn.Close()
+
+	// gRPC client of User Service
+	userGrpcClient := userGrpcSvc.NewServiceClient(userGrpcClientConn)
+
+	userRepo := user.NewRepository(userGrpcClient)
 	var (
 		httpAddr = flag.String("http.addr", ":"+config.GetEnv("PORT"), "HTTP listen address")
 	)
