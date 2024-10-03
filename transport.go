@@ -1,4 +1,4 @@
-package x_clone_auth_srv
+package x_clone_auth_svc
 
 import (
 	"context"

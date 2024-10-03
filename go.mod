@@ -1,4 +1,4 @@
-module x_clone_auth_srv
+module x_clone_auth_svc
 
 go 1.22.3
 

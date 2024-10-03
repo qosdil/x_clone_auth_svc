@@ -7,9 +7,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	app "x_clone_auth_srv"
-	config "x_clone_auth_srv/config"
-	"x_clone_auth_srv/user"
+	app "x_clone_auth_svc"
+	config "x_clone_auth_svc/config"
+	"x_clone_auth_svc/user"
 
 	"github.com/go-kit/log"
 )
