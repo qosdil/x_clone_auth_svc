@@ -6,7 +6,8 @@ package service;
 message Response {
     string id = 1;
     string username = 2;
-    uint32 created_at = 3;
+    string password = 3;
+    uint32 created_at = 4;
 }
 
 message Request {

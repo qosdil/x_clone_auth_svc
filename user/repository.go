@@ -2,8 +2,9 @@ package user
 
 import (
 	"context"
-	"fmt"
 	grpcSrv "x_clone_auth_svc/user/grpc/service"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserRepository interface {
@@ -30,8 +31,17 @@ func (r *repository) SaveUser(ctx context.Context, user User) error {
 }
 
 func (r *repository) GetUserByUsername(ctx context.Context, username string) (User, error) {
-	// Some gRPC call here
-	// ...
-
-	return User{}, nil
+	user, err := r.userGrpcClient.GetByUsernamePassword(ctx, &grpcSrv.Request{Username: username})
+	if err != nil {
+		return User{}, err
+	}
+	userID, err := primitive.ObjectIDFromHex(user.Id)
+	if err != nil {
+		return User{}, err
+	}
+	return User{
+		ID:       userID,
+		Username: user.Username,
+		Password: user.Password,
+	}, nil
 }
