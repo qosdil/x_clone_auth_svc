@@ -3,12 +3,15 @@ package x_clone_auth_svc
 import (
 	"context"
 	"errors"
-	"time"
 	"x_clone_auth_svc/internal/pkg/user"
+	jwt "x_clone_auth_svc/pkg/jwt"
 
-	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	claimKey = "user_id"
 )
 
 type Service interface {
@@ -37,17 +40,7 @@ func (s *service) Authenticate(ctx context.Context, username, password string) (
 	}
 
 	// Return JWT token
-	return s.generateJWT(user)
-}
-
-func (s *service) generateJWT(user user.User) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": user.ID.Hex(),
-		"exp":     time.Now().Add(time.Hour * 72).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.jwtSecret))
+	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.ID.Hex())
 }
 
 func (s *service) SignUp(ctx context.Context, username, password string) (string, error) {
@@ -63,5 +56,5 @@ func (s *service) SignUp(ctx context.Context, username, password string) (string
 	}
 
 	// Return JWT token
-	return s.generateJWT(user)
+	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.ID.Hex())
 }
