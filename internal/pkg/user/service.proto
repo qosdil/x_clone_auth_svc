@@ -1,4 +1,5 @@
-// To generate from service.proto file: $ protoc --go_out=. --go-grpc_out=require_unimplemented_servers=false:. service.proto
+// To generate from service.proto file, run from project root directory:
+// $ protoc --go_out=./internal/pkg/user/ --go-grpc_out=require_unimplemented_servers=false:. ./internal/pkg/user/service.proto
 syntax = "proto3";
 option go_package = "grpc/service";
 package service;
