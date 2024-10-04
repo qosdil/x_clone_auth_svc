@@ -25,22 +25,6 @@ func NewService(repo user.UserRepository, jwtSecret string) Service {
 	return &service{repo: repo, jwtSecret: jwtSecret}
 }
 
-func (s *service) SignUp(ctx context.Context, username, password string) (string, error) {
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user := user.User{
-		ID:       primitive.NewObjectID(),
-		Username: username,
-		Password: string(hashedPassword),
-	}
-	err := s.repo.SaveUser(ctx, user)
-	if err != nil {
-		return "", err
-	}
-
-	// Return JWT token
-	return s.generateJWT(user)
-}
-
 func (s *service) Authenticate(ctx context.Context, username, password string) (string, error) {
 	user, err := s.repo.GetUserByUsername(ctx, username)
 	if err != nil {
@@ -64,4 +48,20 @@ func (s *service) generateJWT(user user.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(s.jwtSecret))
+}
+
+func (s *service) SignUp(ctx context.Context, username, password string) (string, error) {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	user := user.User{
+		ID:       primitive.NewObjectID(),
+		Username: username,
+		Password: string(hashedPassword),
+	}
+	err := s.repo.SaveUser(ctx, user)
+	if err != nil {
+		return "", err
+	}
+
+	// Return JWT token
+	return s.generateJWT(user)
 }
