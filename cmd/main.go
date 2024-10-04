@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 	app "x_clone_auth_svc"
-	config "x_clone_auth_svc/config"
+	configs "x_clone_auth_svc/configs"
 	"x_clone_auth_svc/internal/pkg/user"
 	userGrpcSvc "x_clone_auth_svc/internal/pkg/user/grpc/service"
 
@@ -19,10 +19,10 @@ import (
 
 func main() {
 	// Load environment variables
-	config.LoadEnv()
+	configs.LoadEnv()
 
 	// Connect to User Svc on gRPC
-	userGrpcClientConn, err := grpc.Dial(config.GetEnv("USER_GRPC_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	userGrpcClientConn, err := grpc.Dial(configs.GetEnv("USER_GRPC_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}
@@ -33,7 +33,7 @@ func main() {
 
 	userRepo := user.NewRepository(userGrpcClient)
 	var (
-		httpAddr = flag.String("http.addr", ":"+config.GetEnv("PORT"), "HTTP listen address")
+		httpAddr = flag.String("http.addr", ":"+configs.GetEnv("PORT"), "HTTP listen address")
 	)
 	flag.Parse()
 
@@ -46,7 +46,7 @@ func main() {
 
 	var s app.Service
 	{
-		s = app.NewService(userRepo, config.GetEnv("JWT_SECRET"))
+		s = app.NewService(userRepo, configs.GetEnv("JWT_SECRET"))
 		s = app.LoggingMiddleware(logger)(s)
 	}
 
