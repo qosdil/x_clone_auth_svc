@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"time"
-	"x_clone_auth_svc/user"
+	"x_clone_auth_svc/internal/pkg/user"
 
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"

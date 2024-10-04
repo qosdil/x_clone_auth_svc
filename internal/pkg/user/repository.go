@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	grpcSrv "x_clone_auth_svc/user/grpc/service"
+	grpcSrv "x_clone_auth_svc/internal/pkg/user/grpc/service"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

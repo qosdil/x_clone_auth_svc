@@ -9,8 +9,8 @@ import (
 	"syscall"
 	app "x_clone_auth_svc"
 	config "x_clone_auth_svc/config"
-	"x_clone_auth_svc/user"
-	userGrpcSvc "x_clone_auth_svc/user/grpc/service"
+	"x_clone_auth_svc/internal/pkg/user"
+	userGrpcSvc "x_clone_auth_svc/internal/pkg/user/grpc/service"
 
 	"github.com/go-kit/log"
 	"google.golang.org/grpc"
