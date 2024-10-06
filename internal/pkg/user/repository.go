@@ -23,7 +23,7 @@ func NewRepository(userGrpcClient grpcSrv.ServiceClient) UserRepository {
 }
 
 func (r *repository) SaveUser(ctx context.Context, user User) error {
-	_, err := r.userGrpcClient.Create(ctx, &grpcSrv.Request{Username: user.Username, Password: user.Password})
+	_, err := r.userGrpcClient.Create(ctx, &grpcSrv.CreateRequest{Username: user.Username, Password: user.Password})
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func (r *repository) SaveUser(ctx context.Context, user User) error {
 }
 
 func (r *repository) GetUserByUsername(ctx context.Context, username string) (User, error) {
-	user, err := r.userGrpcClient.GetByUsernamePassword(ctx, &grpcSrv.Request{Username: username})
+	user, err := r.userGrpcClient.GetByUsername(ctx, &grpcSrv.GetByUsernameRequest{Username: username})
 	if err != nil {
 		return User{}, err
 	}

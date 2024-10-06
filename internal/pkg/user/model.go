@@ -7,3 +7,8 @@ type User struct {
 	Username string             `bson:"username"`
 	Password string             `bson:"password"`
 }
+
+type SecureUser struct {
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	Username string             `bson:"username"`
+}
