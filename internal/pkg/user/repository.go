@@ -7,22 +7,22 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type UserRepository interface {
-	SaveUser(ctx context.Context, user User) error
-	GetUserByUsername(ctx context.Context, username string) (User, error)
+type Repository interface {
+	Create(ctx context.Context, user User) error
+	GetByUsername(ctx context.Context, username string) (User, error)
 }
 
 type repository struct {
 	userGrpcClient grpcSrv.ServiceClient
 }
 
-func NewRepository(userGrpcClient grpcSrv.ServiceClient) UserRepository {
+func NewRepository(userGrpcClient grpcSrv.ServiceClient) Repository {
 	return &repository{
 		userGrpcClient: userGrpcClient,
 	}
 }
 
-func (r *repository) SaveUser(ctx context.Context, user User) error {
+func (r *repository) Create(ctx context.Context, user User) error {
 	_, err := r.userGrpcClient.Create(ctx, &grpcSrv.CreateRequest{Username: user.Username, Password: user.Password})
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func (r *repository) SaveUser(ctx context.Context, user User) error {
 	return nil
 }
 
-func (r *repository) GetUserByUsername(ctx context.Context, username string) (User, error) {
+func (r *repository) GetByUsername(ctx context.Context, username string) (User, error) {
 	user, err := r.userGrpcClient.GetByUsername(ctx, &grpcSrv.GetByUsernameRequest{Username: username})
 	if err != nil {
 		return User{}, err

@@ -20,16 +20,16 @@ type Service interface {
 }
 
 type service struct {
-	repo      user.UserRepository
+	userRepo  user.Repository
 	jwtSecret string
 }
 
-func NewService(repo user.UserRepository, jwtSecret string) Service {
-	return &service{repo: repo, jwtSecret: jwtSecret}
+func NewService(repo user.Repository, jwtSecret string) Service {
+	return &service{userRepo: repo, jwtSecret: jwtSecret}
 }
 
 func (s *service) Authenticate(ctx context.Context, username, password string) (string, error) {
-	user, err := s.repo.GetUserByUsername(ctx, username)
+	user, err := s.userRepo.GetByUsername(ctx, username)
 	if err != nil {
 		return "", errors.New("user not found")
 	}
@@ -50,7 +50,7 @@ func (s *service) SignUp(ctx context.Context, username, password string) (string
 		Username: username,
 		Password: string(hashedPassword),
 	}
-	err := s.repo.SaveUser(ctx, user)
+	err := s.userRepo.Create(ctx, user)
 	if err != nil {
 		return "", err
 	}
