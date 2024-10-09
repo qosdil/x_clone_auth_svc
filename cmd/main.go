@@ -21,7 +21,7 @@ func main() {
 	configs.LoadEnv()
 
 	// Connect to User Svc on gRPC
-	userGrpcClientConn, err := grpc.Dial(configs.GetEnv("USER_GRPC_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	userGrpcClientConn, err := grpc.NewClient(configs.GetEnv("USER_GRPC_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}
