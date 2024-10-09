@@ -30,6 +30,7 @@ func main() {
 	// gRPC client of User Service
 	userGrpcClient := userGrpcSvc.NewServiceClient(userGrpcClientConn)
 
+	repo := app.NewRepository(userGrpcClient)
 	var (
 		httpAddr = flag.String("http.addr", ":"+configs.GetEnv("PORT"), "HTTP listen address")
 	)
@@ -44,7 +45,7 @@ func main() {
 
 	var s app.Service
 	{
-		s = app.NewService(userGrpcClient, configs.GetEnv("JWT_SECRET"))
+		s = app.NewService(repo, configs.GetEnv("JWT_SECRET"))
 		s = app.LoggingMiddleware(logger)(s)
 	}
 

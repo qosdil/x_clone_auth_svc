@@ -5,7 +5,7 @@ import (
 	"errors"
 	jwt "x_clone_auth_svc/pkg/jwt"
 
-	userGrpcSvc "github.com/qosdil/x_clone_user_svc/grpc/service"
+	user "github.com/qosdil/x_clone_user_svc/model"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -14,23 +14,21 @@ const (
 )
 
 type Service interface {
-	SignUp(ctx context.Context, username, password string) (string, error)
 	Authenticate(ctx context.Context, username, password string) (string, error)
+	SignUp(ctx context.Context, username, password string) (string, error)
 }
 
 type service struct {
-	userGrpcClient userGrpcSvc.ServiceClient
-	jwtSecret      string
+	userRepo  Repository
+	jwtSecret string
 }
 
-func NewService(userGrpcClient userGrpcSvc.ServiceClient, jwtSecret string) Service {
-	return &service{userGrpcClient: userGrpcClient, jwtSecret: jwtSecret}
+func NewService(repo Repository, jwtSecret string) Service {
+	return &service{userRepo: repo, jwtSecret: jwtSecret}
 }
 
 func (s *service) Authenticate(ctx context.Context, username, password string) (string, error) {
-	user, err := s.userGrpcClient.GetByUsername(ctx, &userGrpcSvc.GetByUsernameRequest{
-		Username: username,
-	})
+	user, err := s.userRepo.FirstByUsername(ctx, username)
 	if err != nil {
 		return "", errors.New("user not found")
 	}
@@ -41,18 +39,20 @@ func (s *service) Authenticate(ctx context.Context, username, password string) (
 	}
 
 	// Return JWT token
-	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.Id)
+	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.ID)
 }
 
 func (s *service) SignUp(ctx context.Context, username, password string) (string, error) {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user, err := s.userGrpcClient.Create(ctx, &userGrpcSvc.CreateRequest{
-		Username: username, Password: string(hashedPassword),
-	})
+	user := user.User{
+		Username: username,
+		Password: string(hashedPassword),
+	}
+	err := s.userRepo.Create(ctx, user)
 	if err != nil {
 		return "", err
 	}
 
 	// Return JWT token
-	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.Id)
+	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.ID)
 }
