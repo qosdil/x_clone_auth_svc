@@ -8,11 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 	app "x_clone_auth_svc"
-	configs "x_clone_auth_svc/configs"
-	"x_clone_auth_svc/internal/pkg/user"
-	userGrpcSvc "x_clone_auth_svc/internal/pkg/user/grpc/service"
+	"x_clone_auth_svc/configs"
 
 	"github.com/go-kit/log"
+	userGrpcSvc "github.com/qosdil/x_clone_user_svc/grpc/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -31,7 +30,6 @@ func main() {
 	// gRPC client of User Service
 	userGrpcClient := userGrpcSvc.NewServiceClient(userGrpcClientConn)
 
-	userRepo := user.NewRepository(userGrpcClient)
 	var (
 		httpAddr = flag.String("http.addr", ":"+configs.GetEnv("PORT"), "HTTP listen address")
 	)
@@ -46,7 +44,7 @@ func main() {
 
 	var s app.Service
 	{
-		s = app.NewService(userRepo, configs.GetEnv("JWT_SECRET"))
+		s = app.NewService(userGrpcClient, configs.GetEnv("JWT_SECRET"))
 		s = app.LoggingMiddleware(logger)(s)
 	}
 

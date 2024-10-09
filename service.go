@@ -3,10 +3,9 @@ package x_clone_auth_svc
 import (
 	"context"
 	"errors"
-	"x_clone_auth_svc/internal/pkg/user"
 	jwt "x_clone_auth_svc/pkg/jwt"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	userGrpcSvc "github.com/qosdil/x_clone_user_svc/grpc/service"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,16 +19,18 @@ type Service interface {
 }
 
 type service struct {
-	userRepo  user.Repository
-	jwtSecret string
+	userGrpcClient userGrpcSvc.ServiceClient
+	jwtSecret      string
 }
 
-func NewService(repo user.Repository, jwtSecret string) Service {
-	return &service{userRepo: repo, jwtSecret: jwtSecret}
+func NewService(userGrpcClient userGrpcSvc.ServiceClient, jwtSecret string) Service {
+	return &service{userGrpcClient: userGrpcClient, jwtSecret: jwtSecret}
 }
 
 func (s *service) Authenticate(ctx context.Context, username, password string) (string, error) {
-	user, err := s.userRepo.GetByUsername(ctx, username)
+	user, err := s.userGrpcClient.GetByUsername(ctx, &userGrpcSvc.GetByUsernameRequest{
+		Username: username,
+	})
 	if err != nil {
 		return "", errors.New("user not found")
 	}
@@ -40,21 +41,18 @@ func (s *service) Authenticate(ctx context.Context, username, password string) (
 	}
 
 	// Return JWT token
-	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.ID.Hex())
+	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.Id)
 }
 
 func (s *service) SignUp(ctx context.Context, username, password string) (string, error) {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user := user.User{
-		ID:       primitive.NewObjectID(),
-		Username: username,
-		Password: string(hashedPassword),
-	}
-	err := s.userRepo.Create(ctx, user)
+	user, err := s.userGrpcClient.Create(ctx, &userGrpcSvc.CreateRequest{
+		Username: username, Password: string(hashedPassword),
+	})
 	if err != nil {
 		return "", err
 	}
 
 	// Return JWT token
-	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.ID.Hex())
+	return jwt.GenerateJWT(s.jwtSecret, claimKey, user.Id)
 }
