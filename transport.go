@@ -57,6 +57,7 @@ func decodeSignUpRequest(_ context.Context, r *http.Request) (interface{}, error
 		return nil, err
 	}
 
+	// TODO Implement this as middleware.
 	// Validate user inputs
 	v := validator.New(validator.WithRequiredStructEnabled())
 	if err := v.Struct(req); err != nil {
