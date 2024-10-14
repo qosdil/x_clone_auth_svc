@@ -7,39 +7,118 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-kit/kit/transport"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/go-kit/log"
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
+	user "github.com/qosdil/x_clone_user_svc/model"
 )
 
-var ErrInvalidToken = errors.New("invalid token")
+var (
+	ErrCodeBadRequest = errors.New("bad_request")
+	ErrInvalidToken   = errors.New("invalid token")
+)
 
-// MakeHTTPHandler sets up the HTTP routes for authentication
-func MakeHTTPHandler(s Service, logger log.Logger) http.Handler {
-	r := mux.NewRouter()
+type bodyErrField struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
 
-	// Sign up endpoint
-	signUpHandler := httptransport.NewServer(
-		makeSignUpEndpoint(s),
-		decodeSignUpRequest,
-		encodeResponse,
-	)
+func (r *bodyErrField) Error() string {
+	return r.Code + "_" + strings.ReplaceAll(r.Message, " ", "_")
+}
 
-	// Auth endpoint
-	authHandler := httptransport.NewServer(
-		makeAuthEndpoint(s),
-		decodeAuthRequest,
-		encodeResponse,
-	)
+type errorer interface {
+	error() error
+}
 
-	// Register routes
-	pathPrefix := "/auth"
-	v1Path := "/v1" + pathPrefix
-	r.Handle(v1Path, authHandler).Methods("POST")
-	r.Handle(v1Path+"/sign-up", signUpHandler).Methods("POST")
+func codeFrom(err error) int {
+	switch err {
+	case ErrCodeBadRequest:
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
+}
 
-	return r
+func decodeAuthRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req AuthRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+
+func decodeSignUpRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SignUpRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+
+	// Validate user inputs
+	v := validator.New(validator.WithRequiredStructEnabled())
+	if err := v.Struct(req); err != nil {
+		if vErr, ok := err.(validator.ValidationErrors); ok {
+			// As per standard, we take only the first bad input to respond with.
+			// Tag() returns "min" from "min=8".
+			msg := strings.ToLower(vErr[0].Field()) + " field " + vErr[0].Tag()
+
+			// Param() returns "8" from "min=8"
+			if vErr[0].Param() != "" {
+				msg += " " + vErr[0].Param()
+			}
+
+			// Interrupt request flow, respond with the custom error type.
+			return req, &bodyErrField{
+				Code:    ErrCodeBadRequest.Error(),
+				Message: msg,
+			}
+		}
+	}
+
+	return req, nil
+}
+
+func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	if err == nil {
+		panic("encodeError with nil error")
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	// Respond to bad user inputs
+	if v, ok := err.(*bodyErrField); ok {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": bodyErrField{Code: v.Code, Message: v.Message},
+		})
+		return
+	}
+
+	w.WriteHeader(codeFrom(err))
+	code := err.Error()
+	message, ok := user.Errors[err.Error()]
+
+	// Set Code and Message with HTTP default statuses if not found in the map
+	if !ok {
+		message = strings.ToLower(http.StatusText(http.StatusInternalServerError))
+		code = strings.ReplaceAll(message, " ", "_")
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error": bodyErrField{Code: code, Message: message},
+	})
+}
+
+// Response encoder
+func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	if e, ok := response.(errorer); ok && e.error() != nil {
+		encodeError(ctx, e.error(), w)
+		return nil
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	return json.NewEncoder(w).Encode(response)
 }
 
 // JWTAuthMiddleware is a middleware to validate the JWT token
@@ -91,24 +170,35 @@ func JWTAuthMiddleware(secret string) mux.MiddlewareFunc {
 	}
 }
 
-func decodeSignUpRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req SignUpRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
+// MakeHTTPHandler sets up the HTTP routes for authentication
+func MakeHTTPHandler(s Service, logger log.Logger) http.Handler {
+	r := mux.NewRouter()
+	e := makeServerEndpoints(s)
+	options := []httptransport.ServerOption{
+		httptransport.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
+		httptransport.ServerErrorEncoder(encodeError),
 	}
-	return req, nil
-}
 
-func decodeAuthRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AuthRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
-	}
-	return req, nil
-}
+	// Sign up endpoint
+	signUpHandler := httptransport.NewServer(
+		e.SignUpEndpoint,
+		decodeSignUpRequest,
+		encodeResponse,
+		options...,
+	)
 
-// Response encoder
-func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	return json.NewEncoder(w).Encode(response)
+	// Auth endpoint
+	authHandler := httptransport.NewServer(
+		makeAuthEndpoint(s),
+		decodeAuthRequest,
+		encodeResponse,
+	)
+
+	// Register routes
+	pathPrefix := "/auth"
+	v1Path := "/v1" + pathPrefix
+	r.Handle(v1Path, authHandler).Methods("POST")
+	r.Handle(v1Path+"/sign-up", signUpHandler).Methods("POST")
+
+	return r
 }
