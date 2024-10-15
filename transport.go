@@ -34,17 +34,6 @@ type errorer interface {
 	error() error
 }
 
-func codeFrom(err error) int {
-	switch err {
-	case ErrCodeBadRequest:
-		return http.StatusBadRequest
-	case user.ErrCodeUsernameNotAvailable:
-		return http.StatusConflict
-	default:
-		return http.StatusInternalServerError
-	}
-}
-
 func decodeAuthRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -99,7 +88,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		return
 	}
 
-	w.WriteHeader(codeFrom(err))
+	w.WriteHeader(getStatusCode(err))
 	code := err.Error()
 	message, ok := user.Errors[err.Error()]
 
@@ -122,6 +111,17 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	return json.NewEncoder(w).Encode(response)
+}
+
+func getStatusCode(err error) int {
+	switch err {
+	case ErrCodeBadRequest:
+		return http.StatusBadRequest
+	case user.ErrCodeUsernameNotAvailable:
+		return http.StatusConflict
+	default:
+		return http.StatusInternalServerError
+	}
 }
 
 // JWTAuthMiddleware is a middleware to validate the JWT token
