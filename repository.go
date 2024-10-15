@@ -27,7 +27,7 @@ func NewRepository(userGrpcClient userGrpcSvc.ServiceClient) Repository {
 func (r *repository) Create(ctx context.Context, param user.User) error {
 	_, err := r.userGrpcClient.Create(ctx, &userGrpcSvc.CreateRequest{Username: param.Username, Password: param.Password})
 	if status, ok := status.FromError(err); ok && status.Code() == codes.AlreadyExists {
-		return user.ErrCodeUsernameNotAvailable
+		return user.Error{Code: user.ErrCodeUsernameNotAvailable}
 	}
 	if err != nil {
 		return err
