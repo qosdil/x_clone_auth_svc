@@ -88,10 +88,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		return
 	}
 
-	httpCode, bodyCode, bodyMessage := getErrorStatusAndBody(err)
+	httpCode, bodyErrField := getErrorStatusAndBody(err)
 	w.WriteHeader(httpCode)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"error": bodyErrField{Code: bodyCode, Message: bodyMessage},
+		"error": bodyErrField,
 	})
 }
 
@@ -105,18 +105,18 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 	return json.NewEncoder(w).Encode(response)
 }
 
-func getErrorStatusAndBody(err error) (httpCode int, bodyCode, bodyMessage string) {
+func getErrorStatusAndBody(err error) (int, bodyErrField) {
 	if userError, ok := err.(user.Error); ok {
 		switch userError.Code {
 		case user.ErrCodeUsernameNotAvailable:
-			return http.StatusConflict, userError.Code, userError.Error()
+			return http.StatusConflict, bodyErrField{Code: userError.Code, Message: userError.Error()}
 		}
 	}
 
 	// Others = 500
-	bodyMessage = strings.ToLower(http.StatusText(http.StatusInternalServerError))
-	bodyCode = strings.ReplaceAll(bodyMessage, " ", "_")
-	return http.StatusInternalServerError, bodyCode, bodyMessage
+	bodyMessage := strings.ToLower(http.StatusText(http.StatusInternalServerError))
+	bodyCode := strings.ReplaceAll(bodyMessage, " ", "_")
+	return http.StatusInternalServerError, bodyErrField{Code: bodyCode, Message: bodyMessage}
 }
 
 // JWTAuthMiddleware is a middleware to validate the JWT token
