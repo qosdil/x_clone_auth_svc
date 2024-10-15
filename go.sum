@@ -71,8 +71,8 @@ github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjS
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
-github.com/qosdil/x_clone_user_svc v0.5.1 h1:ZCRXJOHyZ7iUdp0dHUlGstsLP/8k1+YbkD1koTU78f8=
-github.com/qosdil/x_clone_user_svc v0.5.1/go.mod h1:+qv0wRDD9FkUHkX5QrJ+T1I9iGqe6SJoDFtxiCXpgGc=
+github.com/qosdil/x_clone_user_svc v0.5.2 h1:J2WGjXIBHLCMtaLcBZv3VaCd2P1vg48Ede0oB/ynijk=
+github.com/qosdil/x_clone_user_svc v0.5.2/go.mod h1:+qv0wRDD9FkUHkX5QrJ+T1I9iGqe6SJoDFtxiCXpgGc=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

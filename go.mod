@@ -9,7 +9,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1
-	github.com/qosdil/x_clone_user_svc v0.5.1
+	github.com/qosdil/x_clone_user_svc v0.5.2
 	golang.org/x/crypto v0.27.0
 	google.golang.org/grpc v1.67.1
 )
