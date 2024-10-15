@@ -48,8 +48,7 @@ func (s *service) SignUp(ctx context.Context, username, password string) (string
 		Username: username,
 		Password: string(hashedPassword),
 	}
-	err := s.userRepo.Create(ctx, user)
-	if err != nil {
+	if err := s.userRepo.Create(ctx, user); err != nil {
 		return "", err
 	}
 
