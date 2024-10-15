@@ -38,6 +38,8 @@ func codeFrom(err error) int {
 	switch err {
 	case ErrCodeBadRequest:
 		return http.StatusBadRequest
+	case user.ErrCodeUsernameNotAvailable:
+		return http.StatusConflict
 	default:
 		return http.StatusInternalServerError
 	}

@@ -51,6 +51,6 @@ func makeSignUpEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(SignUpRequest)
 		token, e := s.SignUp(ctx, req.Username, req.Password)
-		return Response{Token: token, Err: e}, nil
+		return Response{Token: token, Err: e}, e
 	}
 }
